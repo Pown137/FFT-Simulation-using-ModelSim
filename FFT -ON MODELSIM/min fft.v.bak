@@ -1,0 +1,116 @@
+//Realizing run time configurable FFT core using Xilinx modules on Spartan FPGA
+module fft_test (clk,reset,x0_real,x0_imag,x1_real,x1_imag,x2_real,x2_imag,x3_real,x3_imag,y0_real,y0_imag,y1_real,y1_imag,y2_real,y2_imag,y3_real,y3_imag);
+    input clk; 
+    input reset; 
+    input signed [3:0] x0_real; 
+    input signed [3:0] x0_imag; 
+    input signed [3:0] x1_real; 
+    input signed [3:0] x1_imag; 
+    input signed [3:0] x2_real; 
+    input signed [3:0] x2_imag; 
+    input signed [3:0] x3_real;
+    input signed [3:0] x3_imag; 
+    output reg signed [3:0] y0_real; 
+    output reg signed [3:0] y0_imag; 
+    output reg signed [3:0] y1_real;
+    output reg signed [3:0] y1_imag;
+    output reg signed [3:0] y2_real;
+    output reg signed [3:0] y2_imag;
+    output reg signed [3:0] y3_real;
+    output reg signed [3:0] y3_imag; 
+
+
+    wire signed [3:0] w0_real = 4'd7; 
+    wire signed [3:0] w0_imag = 4'd0;
+    wire signed [3:0] w1_real = 4'd0; 
+    wire signed [3:0] w1_imag = -4'd7;
+    wire signed [3:0] w2_real = -4'd7; 
+    wire signed [3:0] w2_imag = 4'd0;
+    wire signed [3:0] w3_real = 4'd0;
+    wire signed [3:0] w3_imag = 4'd7;
+
+    
+    reg signed [3:0] stage1_0_real, stage1_0_imag;
+    reg signed [3:0] stage1_1_real, stage1_1_imag;
+    reg signed [3:0] stage1_2_real, stage1_2_imag;
+    reg signed [3:0] stage1_3_real, stage1_3_imag;
+
+    reg signed [3:0] stage2_0_real, stage2_0_imag;
+    reg signed [3:0] stage2_1_real, stage2_1_imag;
+    reg signed [3:0] stage2_2_real, stage2_2_imag;
+    reg signed [3:0] stage2_3_real, stage2_3_imag;
+
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            stage1_0_real <= 4'd0;
+            stage1_0_imag <= 4'd0;
+            stage1_1_real <= 4'd0;
+            stage1_1_imag <= 4'd0;
+            stage1_2_real <= 4'd0;
+            stage1_2_imag <= 4'd0;
+            stage1_3_real <= 4'd0;
+            stage1_3_imag <= 4'd0;
+        end else begin
+            
+            stage1_0_real <= x0_real + x2_real;
+            stage1_0_imag <= x0_imag + x2_imag;
+            stage1_1_real <= x0_real - x2_real;
+            stage1_1_imag <= x0_imag - x2_imag;
+            stage1_2_real <= x1_real + x3_real;
+            stage1_2_imag <= x1_imag + x3_imag;
+            stage1_3_real <= x1_real - x3_real;
+            stage1_3_imag <= x1_imag - x3_imag;
+        end
+    end
+
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            stage2_0_real <= 4'd0;
+            stage2_0_imag <= 4'd0;
+            stage2_1_real <= 4'd0;
+            stage2_1_imag <= 4'd0;
+            stage2_2_real <= 4'd0;
+            stage2_2_imag <= 4'd0;
+            stage2_3_real <= 4'd0;
+            stage2_3_imag <= 4'd0;
+        end else begin
+           
+            stage2_0_real <= stage1_0_real + stage1_2_real;
+            stage2_0_imag <= stage1_0_imag + stage1_2_imag;
+            stage2_1_real <= stage1_1_real + stage1_3_imag; 
+            stage2_1_imag <= stage1_1_imag - stage1_3_real;
+            stage2_2_real <= stage1_0_real - stage1_2_real;
+            stage2_2_imag <= stage1_0_imag - stage1_2_imag;
+            stage2_3_real <= stage1_1_real - stage1_3_imag;
+            stage2_3_imag <= stage1_1_imag + stage1_3_real;
+        end
+    end
+
+    
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            y0_real <= 4'd0;
+            y0_imag <= 4'd0;
+            y1_real <= 4'd0;
+            y1_imag <= 4'd0;
+            y2_real <= 4'd0;
+            y2_imag <= 4'd0;
+            y3_real <= 4'd0;
+            y3_imag <= 4'd0;
+        end else begin
+            
+            y0_real <= stage2_0_real;
+            y0_imag <= stage2_0_imag;
+            y1_real <= stage2_1_real;
+            y1_imag <= stage2_1_imag;
+            y2_real <= stage2_2_real;
+            y2_imag <= stage2_2_imag;
+            y3_real <= stage2_3_real;
+            y3_imag <= stage2_3_imag;
+        end
+    end
+
+endmodule
+
